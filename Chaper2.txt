@@ -1,0 +1,18 @@
+第二章
+2.1 典型基因数据处理流程概述
+近年来人类基因测序技术逐渐发展成熟，催生了一批精准医疗相关的基因测序产品。其中的核心技术在于变异位点发现，即从测序仪产生的原始数据中得到符合条件的变异位点集合，进而通过质量控制、基因注释等过程出具诊断报告，为临床诊断提供重要参照。
+针对不同的应用场景，变异位点发现流程中使用的样本数、样本测序深度、算法和工具等都存在较大的差别。
+Broad Institute通过对1000 Genomes工程【引用官网】中大量的实验数据的分析整理，总结了当下几种主流的应用场景（如全基因组测序、全外显子测序和癌细胞变异位点检测等），提出了不同场景下变异位点发现流程的Best Practice，旨在为流程的实验设计、质量控制和流程参数方面提供指导。流程的用户可根据自身的测序平台以及硬件环境，对流程中个别工具和参数进行调整，以满足特定的功能需求。
+目前，GATK Best Practice已经成为当下最流行的变异位点发现流程的参考规范【Auwera G A, Carneiro M O, Hartl C, et al. From FastQ data to high‐confidence variant calls: the genome analysis toolkit best practices pipeline[J]. Current protocols in bioinformatics, 2013: 11.10. 1-11.10. 33.】【Castel S E, Levy-Moonshine A, Mohammadi P, et al. Tools and best practices for data processing in allelic expression analysis[J]. Genome biology, 2015, 16(1): 195.】，其中用到的BWA【引用】、Picard、GATK等工具也在业内得到了广泛的承认和应用。
+本文经过对Best Practice中各流程的分析，将基因测序流程分为序列比对、数据清理、变异位点发现三个环节。本节将以GATK Best Practice中的全基因组测序流程（WGS）为例，讲解基因数据分析流程中的各个环节【Best Practice图】。
+全基因组测序指对样本的全部DNA序列进行测序，目前在遗传病检测等领域应用广泛。
+
+2.1.1 基因序列比对（Mapping）
+作为流程中的第一个环节，基因序列比对过程（Mapping）的输入数据是从测序仪得到的原始数据（一般是FASTQ格式）。
+FASTQ格式以Read为单位进行组织，一条Read表示了一条较短的基因序列片段。基因序列本身是由A、G、C、T四种碱基组成的，在二代测序中，Read的长度（读长）一般在100碱基到300碱基之间。FASTQ中记录了每条Read的描述行、碱基序列和每个位点上的测序质量分数。
+由于二代测序原理的限制，无法在测序阶段直接得到每条Read在原本基因序列上的位置，因此需要通过基因序列比对（Mapping）对Read的具体位置进行标记。
+参考基因序列（下文均称为Reference）是进行序列比对的基础，是由NCBI等组织通过复杂的手段提取并验证的生物完整基因草图。目前开源的人类Reference包括b37和hg19两个版本，其中的序列片段仍然在不断完善当中。
+Mapping过程在原理上非常简单，即寻找在reference上与read最相近的片段，然后根据Reference标注Read的位置。但是在实际操作中，Mapping过程非常复杂。【引用GATK PPT中的图】
+首先由于测序样本的基因序列和Reference不可能完全相同，其差异可能是碱基对的增添（Insertions）、缺失（Deletions）和替换（SNPs）等。因此Mapping本质上需要进行模糊匹配。
+此外，目前的二代测序技术中对read上的个别位点容易产生错误，这些错误会与真正的变异产生混淆，加大了序列比对的实现难度。
+目前，
