@@ -10,9 +10,30 @@ Broad InstituteÍ¨¹ý¶Ô1000 Genomes¹¤³Ì¡¾ÒýÓÃ¹ÙÍø¡¿ÖÐ´óÁ¿µÄÊµÑéÊý¾ÝµÄ·ÖÎöÕûÀí£¬×Ü½
 2.1.1 »ùÒòÐòÁÐ±È¶Ô£¨Mapping£©
 ×÷ÎªÁ÷³ÌÖÐµÄµÚÒ»¸ö»·½Ú£¬»ùÒòÐòÁÐ±È¶Ô¹ý³Ì£¨Mapping£©µÄÊäÈëÊý¾ÝÊÇ´Ó²âÐòÒÇµÃµ½µÄÔ­Ê¼Êý¾Ý£¨Ò»°ãÊÇFASTQ¸ñÊ½£©¡£
 FASTQ¸ñÊ½ÒÔReadÎªµ¥Î»½øÐÐ×éÖ¯£¬Ò»ÌõRead±íÊ¾ÁËÒ»Ìõ½Ï¶ÌµÄ»ùÒòÐòÁÐÆ¬¶Î¡£»ùÒòÐòÁÐ±¾ÉíÊÇÓÉA¡¢G¡¢C¡¢TËÄÖÖ¼î»ù×é³ÉµÄ£¬ÔÚ¶þ´ú²âÐòÖÐ£¬ReadµÄ³¤¶È£¨¶Á³¤£©Ò»°ãÔÚ100¼î»ùµ½300¼î»ùÖ®¼ä¡£FASTQÖÐ¼ÇÂ¼ÁËÃ¿ÌõReadµÄÃèÊöÐÐ¡¢¼î»ùÐòÁÐºÍÃ¿¸öÎ»µãÉÏµÄ²âÐòÖÊÁ¿·ÖÊý¡£
+²âÐò¸ù¾Ý²âÐò·½·¨µÄ²»Í¬¿É·ÖÎªµ¥¶Ë²âÐò£¨Single-end£©ºÍË«¶Ë²âÐò£¨Pair-end£©Á½ÖÖ¡£µ¥¶Ë²âÐòµÄÔ­Ê¼Êý¾Ý°üÀ¨Ò»¸öFASTQÎÄ¼þ£¬Ë«¶Ë²âÐò°üº¬Á½¸öFASTQÎÄ¼þ£¬ÎÄ¼þÖÐµÄReads³É¶Ô³öÏÖ¡£ÆäÖÐÒ»Ìõread³ÆÖ®ÎªÁíÒ»ÌõreadµÄmate¡£
 ÓÉÓÚ¶þ´ú²âÐòÔ­ÀíµÄÏÞÖÆ£¬ÎÞ·¨ÔÚ²âÐò½×¶ÎÖ±½ÓµÃµ½Ã¿ÌõReadÔÚÔ­±¾»ùÒòÐòÁÐÉÏµÄÎ»ÖÃ£¬Òò´ËÐèÒªÍ¨¹ý»ùÒòÐòÁÐ±È¶Ô£¨Mapping£©¶ÔReadµÄ¾ßÌåÎ»ÖÃ½øÐÐ±ê¼Ç¡£
 ²Î¿¼»ùÒòÐòÁÐ£¨ÏÂÎÄ¾ù³ÆÎªReference£©ÊÇ½øÐÐÐòÁÐ±È¶ÔµÄ»ù´¡£¬ÊÇÓÉNCBIµÈ×éÖ¯Í¨¹ý¸´ÔÓµÄÊÖ¶ÎÌáÈ¡²¢ÑéÖ¤µÄÉúÎïÍêÕû»ùÒò²ÝÍ¼¡£Ä¿Ç°¿ªÔ´µÄÈËÀàReference°üÀ¨b37ºÍhg19Á½¸ö°æ±¾£¬ÆäÖÐµÄÐòÁÐÆ¬¶ÎÈÔÈ»ÔÚ²»¶ÏÍêÉÆµ±ÖÐ¡£
 Mapping¹ý³ÌÔÚÔ­ÀíÉÏ·Ç³£¼òµ¥£¬¼´Ñ°ÕÒÔÚreferenceÉÏÓëread×îÏà½üµÄÆ¬¶Î£¬È»ºó¸ù¾ÝReference±ê×¢ReadµÄÎ»ÖÃ¡£µ«ÊÇÔÚÊµ¼Ê²Ù×÷ÖÐ£¬Mapping¹ý³Ì·Ç³£¸´ÔÓ¡£¡¾ÒýÓÃGATK PPTÖÐµÄÍ¼¡¿
-Ê×ÏÈÓÉÓÚ²âÐòÑù±¾µÄ»ùÒòÐòÁÐºÍReference²»¿ÉÄÜÍêÈ«ÏàÍ¬£¬Æä²îÒì¿ÉÄÜÊÇ¼î»ù¶ÔµÄÔöÌí£¨Insertions£©¡¢È±Ê§£¨Deletions£©ºÍÌæ»»£¨SNPs£©µÈ¡£Òò´ËMapping±¾ÖÊÉÏÐèÒª½øÐÐÄ£ºýÆ¥Åä¡£
+Ê×ÏÈÓÉÓÚ²âÐòÑù±¾µÄ»ùÒòÐòÁÐºÍReference²»¿ÉÄÜÍêÈ«ÏàÍ¬£¬Æä²îÒì¿ÉÄÜÊÇ¼î»ù¶ÔµÄÔöÌí£¨Insertions£©¡¢È±Ê§£¨Deletions£©ºÍÌæ»»£¨SNPs£©µÈ¡¾Í¼Ê¾¡¿¡£Òò´ËMapping±¾ÖÊÉÏÐèÒª½øÐÐÄ£ºýÆ¥Åä¡£
 ´ËÍâ£¬Ä¿Ç°µÄ¶þ´ú²âÐò¼¼ÊõÖÐ¶ÔreadÉÏµÄ¸ö±ðÎ»µãÈÝÒ×²úÉú´íÎó£¬ÕâÐ©´íÎó»áÓëÕæÕýµÄ±äÒì²úÉú»ìÏý£¬¼Ó´óÁËÐòÁÐ±È¶ÔµÄÊµÏÖÄÑ¶È¡£
-Ä¿Ç°£¬
+Ä¿Ç°¶ÔDNAÐòÁÐMapping³£ÓÃµÄBWA memËã·¨ÊÇÒÔSmith-watermanËã·¨¡¾ÒýÓÃ¡¿Îª»ù´¡£¬Ôö¼ÓÁË»ùÓÚ¹þÏ£±í¡¢ºó×ºÊ÷£¨ºó×ºÊý×é£©µÈË÷ÒýµÄÆô·¢Ê½Ëã·¨£¬´ó´ó¼Ó¿ìÁËÔ­ÓÐËã·¨µÄ´¦ÀíËÙ¶È¡£
+Mapping½×¶ÎµÄÊä³öÎÄ¼þÎªSAM¸ñÊ½¡£Ò»Ð©Á÷³ÌÍùÍù½«SAMÎÄ¼þ½øÒ»²½Ñ¹Ëõ³É¶þ½øÖÆ±íÊ¾ÒÔ½ÚÊ¡¿Õ¼ä£¬Ñ¹ËõºóµÄÎÄ¼þ¸ñÊ½³ÆÎªBAM¡£
+SAM/BAMÎÄ¼þ²»½ö±£ÁôÁËFASTQÎÄ¼þÖÐ¼ÇÂ¼µÄReadÐòÁÐ¡¢²âÐòÖÊÁ¿·ÖÊýÐÅÏ¢£¬»¹Ôö¼ÓÁË¶ÔReadÎ»ÖÃµÄÃèÊö£¬°üÀ¨ReadÎ»ÓÚµÄÈ¾É«Ìå±àºÅ£¨Contig£©¡¢È¾É«ÌåÉÏµÄ¾ßÌåÎ»ÖÃ£¨Position£©¡¢ÓëReferenceµÄMatchÇé¿ö£¨Cigar£©ÒÔ¼°Ò»Ð©±êÖ¾ÐÅÏ¢£¨Flags£©µÈ¡£
+
+2.1.2 »ùÒòÊý¾ÝÇåÀí
+Êý¾ÝÇåÀí£¨Data Clean£©½×¶Î¶ÔÓÚÕýÈ·µØ½øÐÐ±äÒìÎ»µã·¢ÏÖ¹ý³Ì½øÐÐ·Ç³£ÖØÒª¡£Êµ¼ÊÁ÷³ÌÖÐµÄÊý¾ÝÇåÀí¹ý³ÌÐèÒª¸ù¾Ý²ÉÓÃµÄ±äÒìÎ»µã·¢ÏÖËã·¨Á¿ÉíÖÆ¶¨¡£
+³£¼ûµÄÊý¾ÝÇåÀíËã·¨°üÀ¨mark duplicate¡¢ indel realignment¡¢base quality score recalibration(BQSR)µÈ£¬»¹ÓÐÒ»Ð©¸¨ÖúÐÔµÄ¹¤¾ß£¬±ÈÈçBam Sort¡¢Bam IndexµÈÒ²¿ÉÒÔ±»»®ÈëÊý¾ÝÇåÀíµÄ·¶³ë¡£
+Mark DuplicateËã·¨µÄÄ¿µÄÊÇÈ¥³ýSAM/BAMÖÐµÄÈßÓàReads¡£ÕâÐ©ÈßÓàµÄReadsÊÇÔÚ²âÐò½×¶Î£¬Í¬Ò»ÌõÐòÁÐ¶à´Î±»²âÐò²úÉúµÄ¡£ÔÚ±äÒìÎ»µã·¢ÏÖ½×¶Î£¬ÈßÓàReadsÏàµ±ÓÚÍ¬Ò»ÌõÐòÁÐ±»ÖØ¸´¼ÆËã»òÍ³¼Æ¶à´Î£¬¶Ô½á¹û²úÉú¸ºÃæÓ°Ïì£¬
+SamTools¡¢PicardÖÐ¾ùÊµÏÖÁË¸÷×ÔµÄMark DuplicateËã·¨¡£ÆäÖÐPicardµÄMark DuplicateËã·¨¸üÊÊºÏ´¦ÀíPair-endµÄDNAÊý¾Ý¡£SamToolsÔò¸üÊÊºÏ´¦ÀíSingle-endµÄÐòÁÐ¡£
+Indel RealignmentËã·¨µÄ×÷ÓÃÊÇÕë¶ÔÐòÁÐÖÐInsertionºÍDeletion£¨Í³³ÆÎªIndel£©ÖÜÎ§½øÐÐ¾Ö²¿ÖØÐÂ±È¶Ô¡£
+ÔÚÐòÁÐ±È¶Ô¹ý³ÌÖÐ£¬Ã¿ÌõreadsÖ®¼äµÄMapping¹ý³ÌÊÇ¶ÀÁ¢µÄ£¬ÇÒÃ»ÓÐ²Î¿¼Ä¿Ç°ÑÐ¾¿·¢ÏÖµÄÒÑÖª±äÒìÎ»µã£¬Òò´ËÔÙIndel¸½½ü·Ç³£ÈÝÒ×Òò²âÐò´íÎó´øÀ´µÄÔëÉù¸ÉÈÅµ¼ÖÂMappingµÄÎ»ÖÃ²»¹»¾«È·£¬½ø¶ø²úÉúºÜ¶à´íÎóµÄSNP¡£
+Indel RealignmentÍ¨¹ý¶Ô¾Ö²¿ÇøÓòÄÚµÄReads½øÐÐµ÷Õû£¬¾¡¿ÉÄÜÊ¹¶ÑµþReadsµÄIndel±£³ÖÒ»ÖÂ£¬·½±ãÖ®ºóµÄ±äÒìÎ»µã¼ì²â¹ý³Ì¡¾Í¼¡¿¡£Indel RealignmentËã·¨Ä¿Ç°¼¯³ÉÔÚGATKÖÐ¡£
+¾ø´ó²¿·ÖVariant callingµÄËã·¨¶¼ÒÀÀµÓÚReadÉÏ¸÷Î»µãµÄ²âÐòÖÊÁ¿¡£ReadÖÐ½ÏµÍÖÊÁ¿µÄ²¿·ÖËµÃ÷³öÏÖ²âÐò´íÎóµÄ¿ÉÄÜ¸ü´ó£¬ÍùÍù´ú±í×Å¸üµÍµÄ¿ÉÐÅ¶È¡£ÖÊÁ¿¹ýµÍµÄ²¿·ÖÉõÖÁ¿ÉÄÜÔÚÔ¤´¦ÀíÖÐ±»ÇÐ³ý¡£
+Õâ¸öÖÊÁ¿·ÖÊýÊÇÓÉ²âÐòÒÇ¸ø³öµÄ£¬µ«ÊÇÓÉÓÚÊÜµ½¸÷ÖÖÏµÍ³Îó²îµÄÓ°Ïì£¬Õâ¸ö·ÖÊýÍùÍùÕûÌåµÍÓÚ»ò¸ßÓÚÊµ¼ÊµÄÖÊÁ¿·ÖÊý¡£
+Base quality score recalibration£¨BQSR£©Ê¹ÓÃ»úÆ÷Ñ§Ï°µÄ·½·¨£¬»ùÓÚ¾­Ñé¶Ô²âÐò¹ý³ÌÖÐµÄÎó²î²ÎÊý½øÐÐ½¨Ä££¬µ÷ÕûËùÓÐReadµÄÖÊÁ¿·ÖÊý¡£Êµ¼ùÖ¤Ã÷£¬BQSR¿ÉÒÔÕûÌåÌá¸ßReadÖÊÁ¿·ÖÊýµÄ×¼È·¶È£¬´Ó¶øÌá¸ß±äÒìÎ»µã·¢ÏÖµÄÖÊÁ¿¡£
+
+2.1.3 ±äÒìÎ»µã·¢ÏÖ
+±äÒìÎ»µã·¢ÏÖ£¨Variant discovery£©µÄÄ¿µÄÊÇ½«Ñù±¾ÐòÁÐÓë²Î¿¼ÐòÁÐ½øÐÐ¶Ô±È£¬µÃµ½Ñù±¾Óë²Î¿¼ÐòÁÐµÄ»ùÒòÐÍ²îÒì£¬ÕâÐ©±äÒìÖÐ¿ÉÄÜ»á°üº¬×ÅÖÂ²¡»ùÒò¡£
+È»¶ø²âÐò¹ý³ÌºÍMapping¹ý³ÌÒýÈëÁËÒ»Ð©
+
+2.3 SparkÔ­ÀíÓë±à³ÌÄ£ÐÍ
