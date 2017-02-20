@@ -20,9 +20,9 @@ Mapping过程在原理上非常简单，即寻找在reference上与read最相近的片段，然后根据Refe
 Mapping阶段的输出文件为SAM格式。一些流程往往将SAM文件进一步压缩成二进制表示以节省空间，压缩后的文件格式称为BAM。
 SAM/BAM文件不仅保留了FASTQ文件中记录的Read序列、测序质量分数信息，还增加了对Read位置的描述，包括Read位于的染色体编号（Contig）、染色体上的具体位置（Position）、与Reference的Match情况（Cigar）以及一些标志信息（Flags）等。
 
-2.1.2 基因数据清理
-数据清理（Data Clean）阶段对于正确地进行变异位点发现过程进行非常重要。实际流程中的数据清理过程需要根据采用的变异位点发现算法量身制定。
-常见的数据清理算法包括mark duplicate、 indel realignment、base quality score recalibration(BQSR)等，还有一些辅助性的工具，比如Bam Sort、Bam Index等也可以被划入数据清理的范畴。
+2.1.2 基因数据清理（Data Cleanning）
+数据清理阶段对于正确地进行变异位点发现过程进行非常重要。实际流程中的数据清理过程需要根据采用的变异位点发现算法量身制定。
+常见的数据清理算法包括mark duplicate、 indel realignment、base quality score recalibration(BQSR)等。
 Mark Duplicate算法的目的是去除SAM/BAM中的冗余Reads。这些冗余的Reads是在测序阶段，同一条序列多次被测序产生的。在变异位点发现阶段，冗余Reads相当于同一条序列被重复计算或统计多次，对结果产生负面影响，
 SamTools、Picard中均实现了各自的Mark Duplicate算法。其中Picard的Mark Duplicate算法更适合处理Pair-end的DNA数据。SamTools则更适合处理Single-end的序列。
 Indel Realignment算法的作用是针对序列中Insertion和Deletion（统称为Indel）周围进行局部重新比对。
@@ -32,8 +32,44 @@ Indel Realignment通过对局部区域内的Reads进行调整，尽可能使堆叠Reads的Indel保持一
 这个质量分数是由测序仪给出的，但是由于受到各种系统误差的影响，这个分数往往整体低于或高于实际的质量分数。
 Base quality score recalibration（BQSR）使用机器学习的方法，基于经验对测序过程中的误差参数进行建模，调整所有Read的质量分数。实践证明，BQSR可以整体提高Read质量分数的准确度，从而提高变异位点发现的质量。
 
-2.1.3 变异位点发现
-变异位点发现（Variant discovery）的目的是将样本序列与参考序列进行对比，得到样本与参考序列的基因型差异，这些变异中可能会包含着致病基因。
-然而测序过程和Mapping过程引入了一些
+2.1.3 变异位点发现（Variant Discovery）
+变异位点发现的目的是将样本序列与参考序列进行对比，得到样本与参考序列的基因型差异，这些变异中可能会包含着致病基因。
+然而测序过程和Mapping过程引入的错误会和实际的变异位点混杂在一起，因此变异位点发现的一个重要任务就是平衡算法的敏感度：敏感度太低会导致很多低支持度的变异位点无法被检测到，而过于敏感会导致假阳性位点。
+业界一般采取的方法是将发现过程分为两步：变异位点召回（Variant calling）和变异位点过滤（Variant filtering）。在召回阶段，使用敏感度极高的算法尽可能将变异位点检测出来；在过滤阶段，将敏感度调整至适当的值去除假阳性位点。
+常见的变异位点发现的算法包括GATK的Haplotype Caller、Samtools的mpileup、专门用于癌细胞变异位点检测的Mutect等。
+为避免噪声干扰，大多算法都基于统计学习的方法，并给出变异位点的可信度。比如Haplotype Caller基于隐马尔可夫模型的变体Pair-HMM，Mutect采用了基于贝叶斯的模型等。
+常用的变异位点过滤方法是变异位点质量分数重校准（variant quality score recalibration, VQSR）。其原理是利用机器学习的方法验证变异位点的可信度，并通过基因注释来注明变异基因型的详细信息。
+这个方法的缺点是需要一次获得足够多的变异位点来进行模型训练，并且需要大规模的已知位点信息进行注释。目前业内已经通过大量的实验研究建立了已知位点数据库（dbsnp）,该库还在不断的扩充完善当中。
 
-2.3 Spark原理与编程模型
+2.2 现有并行优化工作
+当下流行的分布式计算技术提供了大数据的存储、并行计算的解决方案，非常适合用于对基因数据分析流程进行优化和加速。目前国内外对基因数据分析流程的加速优化工作主要包括Broad Institute的GATK Queue【网页】、XXXX的HugeSeq【论文】、XXXX的Churchill【论文】和XXXX的ADAM【论文】等。
+GATK Queue是GATK的开发者Broad Institute自行研发的GATK分布式框架。Queue基于SGE、PBS等集群任务调度系统和节点间共享的存储系统，集成了Indel Realignment、Base Quality Score Recalibration、Haplotype Caller等算法。
+Queue的并行采用Scatter-Gather模式，其原理是将Reference按照等长或者染色体的方式切分为多个Interval，每个Interval中的数据分别执行算法。Queue将对一个Interval中数据的处理作为一个任务，提交到任务调度系统，调度系统将这些任务分配到不同的机器上执行，使其能够利用集群的资源。Merge任务依赖于所有数据处理的任务，负责将结果数据合并。【图示】
+在目前Queue的实现当中，每执行完一个算法都要将结果进行合并。然而由于各个算法的中间结果非常庞大，反复的切分-合并过程会导致大量的磁盘读写开销，限制了系统的扩展性。另外，Queue并没有对GATK以外的BWA mem、Picard Mark Duplicate算法进行支持，不能对一个完整的流程进行并行。
+HugeSeq同样依赖于SGE等任务调度系统，实现了从Mapping、Data clean和Variant Discovering的完整并行。
+对于BWA mem算法，HugeSeq将输入的FASTQ数据分为多份，每一份单独运行BWA mem算法。每个BWA任务输出的子结果中的序列可能会分布在整条reference的任何位置，因此HugeSeq又将子结果按照染色体进行进一步切分，然后将所有同一条染色体上的切分进行合并，最终得到了所有序列基于染色体的一个划分。
+对于之后的Mark Duplicate、Indel Realignment等算法，HugeSeq采用了“单次划分，多次执行”的方式，之后的每种算法都在相同的划分上进行，因而减少了反复的磁盘读写操作，大大缩短了流程整体运行时间。
+然而由于采用了基于染色体的切分方式，HugeSeq的扩展性受限于人类染色体的条数（共24条），且不同染色体之间的长度差异非常大，导致运行时出现负载不均的现象。
+Churchill采用了与HugeSeq类似的方法，不过不同于HugeSeq按照染色体切分的方式，它将Reference切分成等长的Interval进行并行。由于Interval数量不受到染色体个数的限制，使得Churchill能够达到很高的并行度。
+然而这种数据划分方式会影响一些算法的正确性，因此Churchill采用对每个Interval增加一定长度的Overlap（默认为300个bp）的方法降低其对结果的影响。
+以上的几种并行方式都使用了基于任务调度系统和共享存储的方法，虽然取得了不错的加速效果，但均无法避免大量中间结果在磁盘上的反复读写，在一定程度上影响了程序性能。此外，除了GATK Queue以外，其余的优化都是基于特定流程的优化，其算法实现和优化模式难以通用。
+ADAM是一个基于Spark的基因数据处理框架，其中集成了Mark Duplicate、Indel Realignment、BQSR等算法。
+利用Spark自身的特点，ADAM的运算几乎全部位于内存当中，可以达到更好的性能，且具备良好的扩展性、容错性。同时，Spark提供了Map、GroupBy、Join等丰富的数据操作原语，使得数据划分后仍然可以进行数据的交换，更有利于算法的正确实现。
+另外，ADAM将几种主要的算法抽象成了API，用户可以通过使用API进行二次开发，大大降低了基因数据处理流程的编写成本。
+然而目前ADAM只集成了一些Data Clean算法，无法对整个流程提供优化支持。
+除了对流程的并行优化之外，国内外还对特定工具进行了大量的优化工作。印第安纳大学的Hadoop-Blast【引用】将比对算法BLAST移植到Hadoop上以支持对更大规模数据的处理。剑桥大学的Petr Klus等人开发的BarraCUDA【引用】将序列比对算法移植到GPU上以取得更好的性能。Shanshan Ren等人使用FPGA对HaplotypeCaller中的Pair-HMM算法进行了加速【Ren S, Sima V M, Al-Ars Z. FPGA acceleration of the pair-HMMs forward algorithm for DNA sequence analysis[C]//Bioinformatics and Biomedicine (BIBM), 2015 IEEE International Conference on. IEEE, 2015: 1465-1470.】
+其中的一些工作可以被结合到对流程的优化工作当中。
+
+2.3 Spark任务执行原理
+本文旨在基于Spark平台，对基因数据分析算法进行实现与优化。为了达到更好的性能，必须了解Spark上任务执行与调度的原理。
+Spark采用基于内存计算的方式，用户可将重复利用的数据缓存在内存当中，提高下次使用时的计算效率。因此Spark非常适合进行迭代式的计算。
+Spark将分布在多台机器内存中的数据集合定义为弹性分布式数据集（Resilient Distributed Dataset, RDD），将整个运算过程抽象为RDD的产生、转换和规约操作。
+RDD在运行时是只读的，一个RDD只能由文件产生或者由其他RDD转化得到。针对RDD的操作分为Transformation（变换）和Action（行动）两种。Transformation表示RDD从一个父RDD中转化得到，常见的Transformation包括map、flatMap、groupBy等。Action操作往往代表对RDD进行信息收集并反馈给Driver程序，常见的Action包括collect、count等。
+Transformation的计算是惰性的。即在Driver程序中提交了Transformation的操作，Transformation不会立即执行，而是等到下一个Action操作提交后，将前面积攒的操作生成一个Job，交给DAGSchedule进行任务的解析。
+DAGSchedule根据操作之间的依赖关系对将Job切分为多个Stage。操作之间的依赖分为窄依赖和宽依赖两种【图】。在Spark当中，RDD在多机上以分区的方式进行组织，通过Block Manager组件进行管理。每个分区一般存储在内存当中，当内存不够时也有可能存储在磁盘上。
+窄依赖是指父RDD的每个分区只被子RDD的一个分区所使用，宽依赖是指父RDD的每个分区都可能被多个子RDD分区所使用。常见的窄依赖操作包括map、flatMap、filter等，常见的宽依赖操作包括sort、join、groupBy等。连续拥有窄依赖的RDD会被归并到同一个Stage当中。生成Stage之后，每个Stage根据划分的数量生成多个Task，交由TaskSchedule组件在多机上调度执行。
+引起宽依赖的操作又称为Shuffle操作。Shuffle操作涉及磁盘和网络的I/O、数据序列化和解序列化等昂贵的操作，对机器性能、网络带宽等都有较大的压力。当个别任务出错时，与Shuffle操作的Task恢复会导致更多的Task重新执行，增大了系统的容错开销。
+在接下来的章节里，我们将讲述如何根据基因数据处理算法的特点，尽可能避免使用Shuffle操作，从而达到更好的性能。
+
+2.4 本章小结
+本章开始概述了基因数据分析流程中各个环节的意义与一般方法，简单引出了必要的生物学知识，进一步突出了论文研究问题的价值。接下来介绍了几种对流程的并行优化工作，分析其意义和存在问题。最后介绍与本文工作密切相关的Spark平台的任务执行原理，帮助理解文中采用的优化方法。
