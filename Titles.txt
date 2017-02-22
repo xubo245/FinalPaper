@@ -13,7 +13,7 @@
 2.2 现有并行优化工作
 2.3本章小结
 
-第三章 常见基因数据处理算法分析
+第三章 基因数据处理算法过程分析与Spark并行实现
 3.1 BWA mem
 3.2 Picard Mark Duplicate
 3.3 Indel Realignment
@@ -24,8 +24,8 @@
 
 第四章 基因数据分析编程框架SparkSeq
 4.1 整体设计
-4.2 API设计
-4.3 流程执行引擎设计
+4.2 流程执行引擎设计
+4.3 API设计
 4.4 算法实现
 4.4.1 BWA mem算法并行实现
 4.4.2 Mark Duplicate算法并行实现
