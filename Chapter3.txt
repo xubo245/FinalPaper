@@ -1,5 +1,7 @@
 第三章
-Spark适用于进行快速、可靠的大数据分析。基因数据分析流程的数据和计算量规模也符合Spark的承载范围。不过相比于一般的Spark数据处理过程，基因数据处理算法更加复杂，不同的基因数据算法采用的并行方式不尽相同。本章将对框架中集成的几种算法的具体流程和并行方式进行分析，讨论在Spark上的实现方式。
+Spark适用于进行快速、可靠的大数据分析。基因数据分析流程的数据和计算量规模也符合Spark的承载范围。
+不过相比于一般的Spark数据处理过程，基因数据处理算法更加复杂，不同的基因数据算法采用的并行方式不尽相同。
+本章将对框架中集成的几种算法的具体流程和并行方式进行分析，讨论在Spark上的实现方式。
 
 3.1 BWA mem
 BWA mem算法是DNA序列比对中常用的算法，支持对Pair-end数据和Single-end数据的比对。该算法能够高效而精确地比对100-500长度的较长序列，逐渐成为最流行的Read比对算法。
@@ -59,7 +61,8 @@ IndelRealigner的map阶段需要在获取一个target region中全部read之后再进行清理工作，
 （1）读取Reference的序列名称、序列长度等信息，生成分区信息。每个分区的两端留出一定长度的overlap。
 （2）将Reference、已知位点和Read数据按照分区信息得到所属的partitionId，使用groupBy操作划分到多个partition当中。其中位于overlap中的数据需要被复制并赋予不同的key，使其可以被划入临近的partition。
 （3）在partition内部遍历Pileup，找到需要重新比对的target region。
-（4）在同一个partition内
+（4）在同一个partition内，根据找到的target region进行read重新比对。
+（5）将partition内非overlap部分的read通过flatMap操作转化为重比对后的read RDD。
 
 3.4 Base Quality Score Recalibration
 Base Quality Score Recalibration算法的原理是对整体数据进行统计，构建位点错误与观测特征的共现模型（covariation model）当某个位点符合特征对应的错误率越高，说明该位点的可信度越低，由此重新评估Read中每个位点的质量分数。
@@ -70,4 +73,43 @@ BaseRecalration以Read为数据单元。对于每条Read的处理步骤如下：
 （3）如果Read与序列发生的mismatch不属于已知位点，则视为一个测序错误（Error）。根据Error的种类（snp、insertion或deletion），结合BAQ生成每种类别的错误指数。
 （4）根据共现模型，将错误指数累加到对应的特征中。
 完成Read的遍历之后，根据累加的错误指数和特征的观测次数重新估计整个数据集中Read的质量分数，生成BQSR表。PrintReads工具将读取这份报告，在遍历所有Read的同时对Read逐个进行转化。
-BaseRecalibrator的计算过程本质上是一个计算局部结果再累加的过程，其中局部结果的计算式以Read为单位进行的，Read之间不存在干扰。基于以上特征，可以将Read划分在多个任务当中，然后生成局部的Error统计进行归并。局部结果的归并方式是累加，对计算的先后顺序没有要求，因此可以使用树形归并的方式进行。在得到归并的Error统计之后，再统一生成BQSR表。
+BaseRecalibrator的计算过程本质上是一个计算局部结果再累加的过程，其中局部结果的计算式以Read为单位进行的，Read之间不存在干扰。
+基于以上特征，可以将Read划分在多个partition当中，然后生成局部的Error统计进行归并。局部结果的归并方式是累加，对计算的先后顺序没有要求，因此可以使用树形归并的方式进行。
+在得到归并的Error统计之后，生成全局的BQSR表，在集群上进行广播。各个执行节点对各自负责的read进行质量分值调整。
+在Spark上的实现流程如下：
+（1）按照Indel Realignment实现中描述的方法对Reference、已知位点和Read数据进行划分。由于不存在邻近区域的数据依赖，因此不需要overlap。
+（2）在每个partition内对一组特征的共现次数和错误率进行统计，使用map操作将分组数据转化为局部的统计结果。
+（3）通过collect操作将多机上的统计结果收集到Driver节点上，汇总生成全局的BQSR表。
+（4）对全局BQSR表进行广播（broadcast）操作，使其在各个任务中都有一份拷贝。
+（5）使用全局BQSR表对read进行重比对操作，使用flatMap操作转化为质量分数调整之后的read RDD。
+需要注意的是，第三步中的collect操作是一个action，在Spark中，action会将程序分割成不同的job执行，前一个job中的RDD缓存在内存当中，在内存不足时可能会被清除。
+为了保证RDD不会被回收，需要在collect操作之前对RDD进行cache操作，以便在下一个job中仍然能够使用。
+
+3.5 Haplotype Caller
+Haplotype Caller的基本原理是先根据Read找出可能具有变异的区域active region，然后在active region中使用德布林图重新拼接、Pair-HMM求似然等算法找出可能的变异位点。
+算法的大致流程如下：
+（1）以pileup为单位进行遍历，找出数据集上的actvie region。
+（2）对于一个active region，使用德布林图（De Bruijn-like graph）对read进行重新拼接。以节点之间的转换概率为基础计算每条路径的似然得分，选取其中得分最高的几条路径作为候选的基因型（haplotype）。
+以每个可能的haplotype作为参考序列，使用Smith-Waterman算法将read进行重新比对。
+（3）在一个active region中，对每一个haplotype，使用Pair-HMM算法计算read相对于haplotype的似然得分（likelihood），进而转化成每条read对某种基因型（Allele）的支持度评分，再转化成Allele在数据集上的支持度。
+（4）使用贝叶斯公式计算每种基因型的后验概率，选择概率最大的基因型作为最终检测到的变异位点。
+可以看出，算法的后三个步骤都是针对active region内完成的，可以以active region为单位进行并行。对于第一步中，Active region计算的具体流程如下：
+（1）遍历整个Reference，在每个位点上根据pileup和已知位点信息计算出active score。
+（2）对active score组成的序列使用高斯平滑进行处理，得到数据集的活性图谱（active profile）。
+（3）对于活性图谱中的极大值，计算其相邻区域中超过活性阈值的区域作为初始的active region。【图】
+（4）算法要求active region的大小必须在50-300bp之间。如果active reigon过短，则向两侧延伸一定长度。如果过长，则使用截断的方法，将长active region以300bp为单位截断成多个。
+其中，平滑过程使得一段区域上的计算会影响到临近的区域，影响的长度与平滑算法的参数有关，在实现时设定为50bp。但是对于截断操作而言，理论上一个active region的截断可能会对所有后续的延伸、截断操作产生影响，不利于算法的整体并行。【如图】
+不过在实际操作中，出现超长active region的可能性几乎不存在。即使active region受到截断的影响，对于后续的重拼接、重比对等过程的影响也相对有限。
+因此在我们的实现中，使用了与Indel Realignment算法相同的对数据进行区域划分，然后在区域两侧增加overlap的方法。overlap的长度越长，对active region划分产生影响的可能性越低。
+具体在Spark上的实现流程如下：
+（1）按照Indel Realignment实现中描述的方法对Reference、已知位点和Read数据进行划分，设定更长的overlap。
+（2）在每个partition内，使用串行的active region计算方法计算active region。
+（3）在同一个partition内，对active region进行拼接、Pair-HMM求似然等处理，得到候选基因型，生成GVCF格式的中间结果。
+（4）对中间结果进行进一步过滤和聚合，得到最终的变异位点。
+
+3.6 本章小结
+本章对于常见的基因数据分析算法流程进行了较为详细的描述，并逐个分析了算法中各步骤的并行性，探讨其在Spark上的实现方式。
+其中BWA mem算法和BQSR算法可以非常好地在Spark上实现任务划分式地并行。
+Indel Realignment算法以及Haplotype Caller算法如果采用直接数据划分地方法并行，可能对划分边缘的正确性带来影响，因此使用在partition两侧各增加一定长度overlap的方式降低产生影响的可能。
+对于Mark Duplicate算法，由于其数据依赖不容易预测，因此不适合采用数据划分的方法进行并行。本文中给出了基于Spark原语的算法实现，保证了算法结果的正确性。
+经过对算法分析不难发现，基于GATK开发的一系列工具在输入数据、计算模式上具有一定的相似性。这种相似性使我们可以以此建立一类工具的执行框架，同时也提供了继续优化的空间。
